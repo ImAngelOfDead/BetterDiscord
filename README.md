@@ -1,0 +1,2 @@
+# BetterStats
+Plugin for BetterDiscord
