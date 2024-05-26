@@ -9,9 +9,9 @@ BetterStats is a plugin for BetterDiscord that tracks various user statistics, i
 - **Click Statistics**: Tracks the number of clicks within the Discord application.
 - **Tab-based Settings**: Organizes statistics into separate tabs for easy navigation.
 
-## Installation
+## Installationhttps://github.com/nkplka/BetterStats
 
-1. Download the latest release of the plugin from the [Releases](https://github.com/nkplkaa/BetterStats/releases) section.
+1. Download the latest release of the plugin from the [Releases]((https://github.com/nkplka/BetterStats/releases) section.
 2. Move the downloaded `.plugin.js` file to your BetterDiscord plugins folder. This is typically located at `C:\Users\<Your_Username>\AppData\Roaming\BetterDiscord\plugins`.
 3. Restart Discord and enable the plugin from the BetterDiscord settings menu.
 
