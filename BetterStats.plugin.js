@@ -1,6 +1,6 @@
 /**
  * @name BetterStats
- * @version 0.1.2
+ * @version 0.0.1
  * @description Tracks various user statistics in Discord.
  * @author z3phyr
  */
@@ -17,7 +17,7 @@ const config = {
                 name: "z3phyr"
             }
         ],
-        version: "0.1.2",
+        version: "0.0.1",
         description: "Tracks various user statistics in Discord."
     },
     defaultConfig: []
