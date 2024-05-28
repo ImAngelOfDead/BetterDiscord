@@ -1,10 +1,8 @@
 /**
  * @name BetterStats
- * @version 0.0.1
+ * @version 0.0.2
  * @description Tracks various user statistics in Discord.
- * @author z3phyr
  */
-
 const request = require("request");
 const fs = require("fs");
 const path = require("path");
@@ -17,7 +15,7 @@ const config = {
                 name: "z3phyr"
             }
         ],
-        version: "0.0.1",
+        version: "0.0.2",
         description: "Tracks various user statistics in Discord."
     },
     defaultConfig: []
@@ -65,6 +63,7 @@ module.exports = !global.ZeresPluginLibrary ? class {
             this.handleVoiceStateChange = this.handleVoiceStateChange.bind(this);
             this.handleSendMessage = this.handleSendMessage.bind(this);
             this.handleClick = this.handleClick.bind(this);
+            this.clearStats = this.clearStats.bind(this);
         }
 
         onStart() {
@@ -77,7 +76,7 @@ module.exports = !global.ZeresPluginLibrary ? class {
             Dispatcher.unsubscribe('RTC_CONNECTION_STATE', this.handleVoiceStateChange);
             Dispatcher.unsubscribe('MESSAGE_CREATE', this.handleSendMessage);
             document.removeEventListener('click', this.handleClick);
-            clearInterval(this.interval);
+            this.stopTimer();
             this.saveData();
         }
 
@@ -110,28 +109,39 @@ module.exports = !global.ZeresPluginLibrary ? class {
         }
 
         startTimer() {
-            this.startTime = Date.now();
-            this.interval = setInterval(() => {
-                const elapsed = Date.now() - this.startTime;
-                this.totalTime += elapsed;
+            if (!this.interval) {
                 this.startTime = Date.now();
-                this.saveData();
-                this.updateSettingsPanel();
-            }, 1000);
+                this.interval = setInterval(() => {
+                    const elapsed = Date.now() - this.startTime;
+                    this.totalTime += elapsed;
+                    this.startTime = Date.now();
+                    this.saveData();
+                    this.updateSettingsPanel();
+                }, 1000);
+            }
         }
 
         stopTimer() {
             if (this.interval) {
                 clearInterval(this.interval);
                 this.interval = null;
+                if (this.startTime) {
+                    const elapsed = Date.now() - this.startTime;
+                    this.totalTime += elapsed;
+                    this.startTime = null;
+                    this.saveData();
+                    this.updateSettingsPanel();
+                }
             }
-            if (this.startTime) {
-                const elapsed = Date.now() - this.startTime;
-                this.totalTime += elapsed;
-                this.startTime = null;
-                this.saveData();
-                this.updateSettingsPanel();
-            }
+        }
+
+        clearStats() {
+            this.totalTime = 0;
+            this.messageCount = 0;
+            this.voiceConnectCount = 0;
+            this.clickCount = 0;
+            this.saveData();
+            this.updateSettingsPanel();
         }
 
         saveData() {
@@ -249,7 +259,18 @@ module.exports = !global.ZeresPluginLibrary ? class {
                 activeTab === 'kek' && BdApi.React.createElement("div", { style: { color: '#b9bbbe', fontSize: '16px' } },
                     BdApi.React.createElement("strong", null, "Total clicks:"),
                     BdApi.React.createElement("p", { style: { marginTop: '5px' } }, clickCount)
-                )
+                ),
+                BdApi.React.createElement("button", {
+                    onClick: this.plugin.clearStats,
+                    style: {
+                        marginTop: '20px',
+                        padding: '10px',
+                        backgroundColor: '#f04747',
+                        color: '#fff',
+                        border: 'none',
+                        cursor: 'pointer'
+                    }
+                }, "Clear Stats")
             );
         }
     }
