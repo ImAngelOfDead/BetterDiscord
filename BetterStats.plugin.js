@@ -1,6 +1,6 @@
 /**
  * @name BetterStats
- * @version 0.0.2
+ * @version 0.0.1
  * @description Tracks various user statistics in Discord.
  */
 const request = require("request");
@@ -15,7 +15,7 @@ const config = {
                 name: "z3phyr"
             }
         ],
-        version: "0.0.2",
+        version: "0.0.1",
         description: "Tracks various user statistics in Discord."
     },
     defaultConfig: []
@@ -94,7 +94,7 @@ module.exports = !global.ZeresPluginLibrary ? class {
         handleSendMessage(e) {
             const currentUser = UserStore.getCurrentUser();
             const currentTime = Date.now();
-            if (e.message.author.id === currentUser.id && currentTime - this.lastMessageTime > 500) {
+            if (e.message.author.id === currentUser.id && currentTime - this.lastMessageTime > 500 /** this rly shit))) */) {
                 this.messageCount += 1;
                 this.lastMessageTime = currentTime;
                 this.saveData();
@@ -207,56 +207,53 @@ module.exports = !global.ZeresPluginLibrary ? class {
             const totalTime = this.plugin.formatTime(this.state.totalTime || 0);
             const { messageCount, voiceConnectCount, clickCount } = this.state;
 
+            const tabStyle = (isActive) => ({
+                flex: 1,
+                padding: '10px',
+                marginRight: '5px',
+                backgroundColor: isActive ? '#7289da' : '#4f545c',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'center',
+                borderRadius: '5px'
+            });
+
+            const contentStyle = {
+                color: '#b9bbbe',
+                fontSize: '16px',
+                padding: '10px',
+                backgroundColor: '#36393f',
+                borderRadius: '5px'
+            };
+
             return BdApi.React.createElement("div", { style: { padding: '20px' } },
                 BdApi.React.createElement("h2", { style: { color: '#fff', fontSize: '24px', marginBottom: '10px' } }, "BetterStats - Statistics"),
                 BdApi.React.createElement("div", { style: { display: 'flex', marginBottom: '10px' } },
                     BdApi.React.createElement("button", {
                         onClick: () => this.setActiveTab('voice'),
-                        style: {
-                            flex: 1,
-                            padding: '10px',
-                            marginRight: '5px',
-                            backgroundColor: activeTab === 'voice' ? '#7289da' : '#4f545c',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: 'pointer'
-                        }
+                        style: tabStyle(activeTab === 'voice')
                     }, "Voice"),
                     BdApi.React.createElement("button", {
                         onClick: () => this.setActiveTab('messages'),
-                        style: {
-                            flex: 1,
-                            padding: '10px',
-                            marginRight: '5px',
-                            backgroundColor: activeTab === 'messages' ? '#7289da' : '#4f545c',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: 'pointer'
-                        }
+                        style: tabStyle(activeTab === 'messages')
                     }, "Messages"),
                     BdApi.React.createElement("button", {
-                        onClick: () => this.setActiveTab('kek'),
-                        style: {
-                            flex: 1,
-                            padding: '10px',
-                            backgroundColor: activeTab === 'kek' ? '#7289da' : '#4f545c',
-                            color: '#fff',
-                            border: 'none',
-                            cursor: 'pointer'
-                        }
-                    }, "Kek")
+                        onClick: () => this.setActiveTab('clicks'),
+                        style: tabStyle(activeTab === 'clicks')
+                    }, "Clicks")
                 ),
-                activeTab === 'voice' && BdApi.React.createElement("div", { style: { color: '#b9bbbe', fontSize: '16px' } },
+                activeTab === 'voice' && BdApi.React.createElement("div", { style: contentStyle },
                     BdApi.React.createElement("strong", null, "Total time in voice channels:"),
                     BdApi.React.createElement("p", { style: { marginTop: '5px' } }, totalTime),
                     BdApi.React.createElement("strong", null, "Total voice connections:"),
                     BdApi.React.createElement("p", { style: { marginTop: '5px' } }, voiceConnectCount)
                 ),
-                activeTab === 'messages' && BdApi.React.createElement("div", { style: { color: '#b9bbbe', fontSize: '16px' } },
+                activeTab === 'messages' && BdApi.React.createElement("div", { style: contentStyle },
                     BdApi.React.createElement("strong", null, "Total messages sent:"),
                     BdApi.React.createElement("p", { style: { marginTop: '5px' } }, messageCount)
                 ),
-                activeTab === 'kek' && BdApi.React.createElement("div", { style: { color: '#b9bbbe', fontSize: '16px' } },
+                activeTab === 'clicks' && BdApi.React.createElement("div", { style: contentStyle },
                     BdApi.React.createElement("strong", null, "Total clicks:"),
                     BdApi.React.createElement("p", { style: { marginTop: '5px' } }, clickCount)
                 ),
@@ -268,7 +265,8 @@ module.exports = !global.ZeresPluginLibrary ? class {
                         backgroundColor: '#f04747',
                         color: '#fff',
                         border: 'none',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        borderRadius: '5px'
                     }
                 }, "Clear Stats")
             );
