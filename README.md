@@ -7,6 +7,7 @@ BetterStats is a plugin for BetterDiscord that tracks various user statistics, i
 - **Voice Statistics**: Tracks the total time spent in voice channels and the number of voice channel connections.
 - **Message Statistics**: Counts the total number of messages sent.
 - **Click Statistics**: Tracks the number of clicks within the Discord application.
+- **Clear Statistics**: Allows resetting all tracked statistics.
 - **Tab-based Settings**: Organizes statistics into separate tabs for easy navigation.
 
 ## Installation
@@ -31,13 +32,16 @@ Shows the total number of messages sent.
 ### Kek Tab
 Shows the total number of clicks within the Discord application.
 
+### Clear Stats
+Provides a button to reset all tracked statistics.
+
 ## Development
 
 If you wish to contribute to the development of this plugin, follow these steps:
 
 1. Clone the repository:
     ```bash
-    git clone https://github.com/nkplkaa/BetterStats.git
+    git clone https://github.com/nkplka/BetterStats.git
     ```
 
 2. Make your changes and test them locally.
