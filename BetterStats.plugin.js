@@ -1,7 +1,7 @@
 /**
  * @name BetterStats
- * @version 0.0.1
- * @description Tracks various user statistics in Discord.
+ * @version 0.0.2
+ * @description Tracks various user statistics in Discord with improved visuals and animations.
  */
 const request = require("request");
 const fs = require("fs");
@@ -15,8 +15,8 @@ const config = {
                 name: "z3phyr"
             }
         ],
-        version: "0.0.1",
-        description: "Tracks various user statistics in Discord."
+        version: "0.0.2",
+        description: "Tracks various user statistics in Discord with improved visuals and animations."
     },
     defaultConfig: []
 };
@@ -216,7 +216,8 @@ module.exports = !global.ZeresPluginLibrary ? class {
                 border: 'none',
                 cursor: 'pointer',
                 textAlign: 'center',
-                borderRadius: '5px'
+                borderRadius: '5px',
+                transition: 'background-color 0.5s ease'
             });
 
             const contentStyle = {
@@ -224,12 +225,24 @@ module.exports = !global.ZeresPluginLibrary ? class {
                 fontSize: '16px',
                 padding: '10px',
                 backgroundColor: '#36393f',
-                borderRadius: '5px'
+                borderRadius: '5px',
+                animation: 'fadeIn 0.5s ease'
+            };
+
+            const buttonStyle = {
+                marginTop: '20px',
+                padding: '10px',
+                backgroundColor: '#f04747',
+                color: '#fff',
+                border: 'none',
+                cursor: 'pointer',
+                borderRadius: '5px',
+                transition: 'background-color 0.3s ease'
             };
 
             return BdApi.React.createElement("div", { style: { padding: '20px' } },
                 BdApi.React.createElement("h2", { style: { color: '#fff', fontSize: '24px', marginBottom: '10px' } }, "BetterStats - Statistics"),
-                BdApi.React.createElement("div", { style: { display: 'flex', marginBottom: '10px' } },
+                BdApi.React.createElement("div", { style: { display: 'flex', marginBottom: '10px', position: 'relative' } },
                     BdApi.React.createElement("button", {
                         onClick: () => this.setActiveTab('voice'),
                         style: tabStyle(activeTab === 'voice')
@@ -259,15 +272,9 @@ module.exports = !global.ZeresPluginLibrary ? class {
                 ),
                 BdApi.React.createElement("button", {
                     onClick: this.plugin.clearStats,
-                    style: {
-                        marginTop: '20px',
-                        padding: '10px',
-                        backgroundColor: '#f04747',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: 'pointer',
-                        borderRadius: '5px'
-                    }
+                    style: buttonStyle,
+                    onMouseOver: (e) => e.target.style.backgroundColor = '#ff5555',
+                    onMouseOut: (e) => e.target.style.backgroundColor = '#f04747'
                 }, "Clear Stats")
             );
         }
