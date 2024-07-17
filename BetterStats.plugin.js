@@ -2,6 +2,7 @@
  * @name BetterStats
  * @version 0.0.2
  * @description Tracks various user statistics in Discord with improved visuals and animations.
+ * @source https://github.com/nkplka/BetterDiscord/blob/main/BetterStats.plugin.js
  */
 const request = require("request");
 const fs = require("fs");
@@ -15,7 +16,7 @@ const config = {
                 name: "z3phyr"
             }
         ],
-        version: "0.0.2",
+        version: "0.0.3",
         description: "Tracks various user statistics in Discord with improved visuals and animations."
     },
     defaultConfig: []
@@ -120,18 +121,16 @@ module.exports = !global.ZeresPluginLibrary ? class {
                 }, 1000);
             }
         }
-
+        
         stopTimer() {
             if (this.interval) {
                 clearInterval(this.interval);
                 this.interval = null;
-                if (this.startTime) {
-                    const elapsed = Date.now() - this.startTime;
-                    this.totalTime += elapsed;
-                    this.startTime = null;
-                    this.saveData();
-                    this.updateSettingsPanel();
-                }
+                const elapsed = Date.now() - this.startTime;
+                this.totalTime += elapsed;
+                this.startTime = null;
+                this.saveData();
+                this.updateSettingsPanel();
             }
         }
 
