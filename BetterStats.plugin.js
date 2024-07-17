@@ -1,8 +1,9 @@
 /**
  * @name BetterStats
- * @version 0.0.2
+ * @version 0.0.3
  * @description Tracks various user statistics in Discord with improved visuals and animations.
  * @source https://github.com/nkplka/BetterDiscord/blob/main/BetterStats.plugin.js
+ * @updateUrl https://github.com/nkplka/BetterDiscord/blob/main/BetterStats.plugin.js
  */
 const request = require("request");
 const fs = require("fs");
