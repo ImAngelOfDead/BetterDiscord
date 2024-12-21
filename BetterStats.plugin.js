@@ -26,7 +26,7 @@ class BetterStats {
   }
 
   loadData() {
-    const savedData = BdApi.loadData("BetterStats", "stats") || {};
+    const savedData = BdApi.Data.load("BetterStats", "stats") || {};
     this.totalTime = savedData.totalTime || 0;
     this.messageCount = savedData.messageCount || 0;
     this.voiceConnectCount = savedData.voiceConnectCount || 0;
@@ -34,7 +34,7 @@ class BetterStats {
   }
 
   flushData() {
-    BdApi.saveData("BetterStats", "stats", {
+    BdApi.Data.save("BetterStats", "stats", {
       totalTime: this.totalTime,
       messageCount: this.messageCount,
       voiceConnectCount: this.voiceConnectCount,
