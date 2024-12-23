@@ -65,7 +65,7 @@ class BetterStats {
       Dispatcher.subscribe("MESSAGE_CREATE", this.handleSendMessage);
       document.addEventListener("click", this.handleClick);
     } else {
-      BdApi.showToast("BetterStats: Required modules not found.", {
+      console.log("BetterStats: Required modules not found.", {
         type: "error",
       });
     }
