@@ -1,299 +1,183 @@
 /**
  * @name BetterStats
- * @version 0.0.7
- * @description Tracks various user statistics in Discord.
+ * @version 0.0.8
+ * @description Tracks and displays various user statistics in Discord.
  * @author m3th4d0n
  * @source https://github.com/M3th4d0n/BetterDiscord/blob/main/BetterStats.plugin.js
  * @updateUrl https://github.com/M3th4d0n/BetterDiscord/blob/main/BetterStats.plugin.js
  */
 
-class BetterStats {
-  constructor() {
-    this.startTime = null;
-    this.totalTime = 0;
-    this.messageCount = 0;
-    this.voiceConnectCount = 0;
-    this.clickCount = 0;
-    this.saveTimeout = null;
-    this.interval = null;
-
-    this.handleVoiceStateChange = this.handleVoiceStateChange.bind(this);
-    this.handleSendMessage = this.handleSendMessage.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-    this.clearStats = this.clearStats.bind(this);
-
-    this.loadData();
-  }
-
-  loadData() {
-    const savedData = BdApi.Data.load("BetterStats", "stats") || {};
-    this.totalTime = savedData.totalTime || 0;
-    this.messageCount = savedData.messageCount || 0;
-    this.voiceConnectCount = savedData.voiceConnectCount || 0;
-    this.clickCount = savedData.clickCount || 0;
-  }
-
-  flushData() {
-    BdApi.Data.save("BetterStats", "stats", {
-      totalTime: this.totalTime,
-      messageCount: this.messageCount,
-      voiceConnectCount: this.voiceConnectCount,
-      clickCount: this.clickCount,
-    });
-  }
-
-  scheduleSave() {
-    if (this.saveTimeout) return;
-
-    this.saveTimeout = setTimeout(() => {
-      this.flushData();
-      this.saveTimeout = null;
-    }, 30000); // Save every 30 seconds
-  }
-
-  start() {
-    const Dispatcher = BdApi.Webpack.getModule(
-      (m) => m.dispatch && m.subscribe
-    );
-    const UserStore = BdApi.Webpack.getModule((m) => m.getCurrentUser);
-
-    this.dispatcher = Dispatcher;
-    this.userStore = UserStore;
-
-    if (Dispatcher && UserStore) {
-      Dispatcher.subscribe("RTC_CONNECTION_STATE", this.handleVoiceStateChange);
-      Dispatcher.subscribe("MESSAGE_CREATE", this.handleSendMessage);
-      document.addEventListener("click", this.handleClick);
-    } else {
-      console.log("BetterStats: Required modules not found.", {
-        type: "error",
-      });
-    }
-  }
-
-  stop() {
-    if (this.dispatcher) {
-      this.dispatcher.unsubscribe(
-        "RTC_CONNECTION_STATE",
-        this.handleVoiceStateChange
-      );
-      this.dispatcher.unsubscribe("MESSAGE_CREATE", this.handleSendMessage);
-    }
-    document.removeEventListener("click", this.handleClick);
-
-    this.stopTimer();
-    this.flushData();
-  }
-
-  handleVoiceStateChange(e) {
-    if (e.state === "RTC_CONNECTED") {
-      this.startTimer();
-      this.voiceConnectCount += 1;
-      this.scheduleSave();
-    } else if (e.state === "RTC_DISCONNECTED") {
-      this.stopTimer();
-    }
-  }
-
-  handleSendMessage(e) {
-    const currentUser = this.userStore?.getCurrentUser();
-    if (currentUser && e.message.author.id === currentUser.id) {
-      this.messageCount += 1;
-      this.scheduleSave();
-    }
-  }
-
-  handleClick() {
-    this.clickCount += 1;
-    this.scheduleSave();
-  }
-
-  startTimer() {
-    if (!this.interval) {
-      this.startTime = Date.now();
-      this.interval = setInterval(() => {
-        const elapsed = Date.now() - this.startTime;
-        this.totalTime += elapsed;
-        this.startTime = Date.now();
-        this.scheduleSave();
-      }, 1000);
-    }
-  }
-
-  stopTimer() {
-    if (this.interval) {
-      clearInterval(this.interval);
-      this.interval = null;
-      const elapsed = Date.now() - this.startTime;
-      this.totalTime += elapsed;
-      this.startTime = null;
-      this.scheduleSave();
-    }
-  }
-
-  clearStats() {
-    this.totalTime = 0;
-    this.messageCount = 0;
-    this.voiceConnectCount = 0;
-    this.clickCount = 0;
-    this.flushData();
-  }
-
-  formatTime(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(
-      2,
-      "0"
-    );
-    const seconds = String(totalSeconds % 60).padStart(2, "0");
-    return `${hours}:${minutes}:${seconds}`;
-  }
-
-  getSettingsPanel() {
-    return BdApi.React.createElement(SettingsPanel, { plugin: this });
-  }
-}
-
-class SettingsPanel extends BdApi.React.Component {
-  constructor(props) {
-    super(props);
-    this.plugin = props.plugin;
-    this.state = {
-      activeTab: "voice",
-    };
-    this.interval = null;
-  }
-
-  componentDidMount() {
-    this.interval = setInterval(() => {
-      this.setState({
-        totalTime: this.plugin.totalTime,
-        messageCount: this.plugin.messageCount,
-        voiceConnectCount: this.plugin.voiceConnectCount,
-        clickCount: this.plugin.clickCount,
-      });
-    }, 1000);
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.interval);
-  }
-
-  setActiveTab(tab) {
-    this.setState({ activeTab: tab });
-  }
-
-  render() {
-    const { activeTab } = this.state;
-    const totalTime = this.plugin.formatTime(this.plugin.totalTime);
-    const { messageCount, voiceConnectCount, clickCount } = this.plugin;
-
-    const tabStyle = (isActive) => ({
-      flex: 1,
-      padding: "10px",
-      marginRight: "5px",
-      backgroundColor: isActive ? "#7289da" : "#4f545c",
-      color: "#fff",
-      border: "none",
-      cursor: "pointer",
-      textAlign: "center",
-      borderRadius: "5px",
-      transition: "background-color 0.3s ease",
-    });
-
-    const contentStyle = {
-      color: "#b9bbbe",
-      fontSize: "16px",
-      padding: "10px",
-      backgroundColor: "#36393f",
-      borderRadius: "5px",
-    };
-
-    const buttonStyle = {
-      marginTop: "20px",
-      padding: "10px",
-      backgroundColor: "#f04747",
-      color: "#fff",
-      border: "none",
-      cursor: "pointer",
-      borderRadius: "5px",
-      transition: "background-color 0.3s ease",
-    };
-
-    return BdApi.React.createElement(
-      "div",
-      { style: { padding: "20px" } },
-      BdApi.React.createElement(
-        "h2",
-        { style: { color: "#fff", fontSize: "24px", marginBottom: "10px" } },
-        "BetterStats - Statistics"
-      ),
-      BdApi.React.createElement(
-        "div",
-        { style: { display: "flex", marginBottom: "10px" } },
-        BdApi.React.createElement(
-          "button",
-          {
-            onClick: () => this.setActiveTab("voice"),
-            style: tabStyle(activeTab === "voice"),
-          },
-          "Voice"
-        ),
-        BdApi.React.createElement(
-          "button",
-          {
-            onClick: () => this.setActiveTab("messages"),
-            style: tabStyle(activeTab === "messages"),
-          },
-          "Messages"
-        ),
-        BdApi.React.createElement(
-          "button",
-          {
-            onClick: () => this.setActiveTab("clicks"),
-            style: tabStyle(activeTab === "clicks"),
-          },
-          "Clicks"
-        )
-      ),
-      activeTab === "voice" &&
-        BdApi.React.createElement(
-          "div",
-          { style: contentStyle },
-          BdApi.React.createElement(
-            "strong",
-            null,
-            "Total time in voice channels:"
-          ),
-          BdApi.React.createElement("p", null, totalTime),
-          BdApi.React.createElement("strong", null, "Total voice connections:"),
-          BdApi.React.createElement("p", null, voiceConnectCount)
-        ),
-      activeTab === "messages" &&
-        BdApi.React.createElement(
-          "div",
-          { style: contentStyle },
-          BdApi.React.createElement("strong", null, "Total messages sent:"),
-          BdApi.React.createElement("p", null, messageCount)
-        ),
-      activeTab === "clicks" &&
-        BdApi.React.createElement(
-          "div",
-          { style: contentStyle },
-          BdApi.React.createElement("strong", null, "Total clicks:"),
-          BdApi.React.createElement("p", null, clickCount)
-        ),
-      BdApi.React.createElement(
-        "button",
+const config = {
+    settings: [
         {
-          onClick: this.plugin.clearStats,
-          style: buttonStyle,
+            type: "category",
+            id: "statsDisplay",
+            name: "Statistics",
+            collapsible: true,
+            shown: true,
+            settings: [
+                {
+                    type: "text",
+                    id: "voiceTime",
+                    name: "Total Voice Time",
+                    value: "00:00:00",
+                    note: "Time spent in voice channels",
+                    disabled: true,
+                },
+                {
+                    type: "text",
+                    id: "messageCount",
+                    name: "Messages Sent",
+                    value: "0",
+                    note: "Total messages sent",
+                    disabled: true,
+                },
+                {
+                    type: "text",
+                    id: "clickCount",
+                    name: "Total Clicks",
+                    value: "0",
+                    note: "Total clicks recorded",
+                    disabled: true,
+                },
+                {
+                    type: "text",
+                    id: "voiceConnectCount",
+                    name: "Voice Connections",
+                    value: "0",
+                    note: "Total voice channel connections",
+                    disabled: true,
+                },
+            ],
         },
-        "Clear Stats"
-      )
-    );
-  }
-}
+    ],
+};
 
-module.exports = BetterStats;
+module.exports = class BetterStats {
+    constructor(meta) {
+        this.meta = meta;
+        this.api = new BdApi(this.meta.name);
+        this.stats = {
+            totalTime: 0,
+            messageCount: 0,
+            voiceConnectCount: 0,
+            clickCount: 0,
+        };
+    }
+
+    start() {
+        const savedVersion = this.api.Data.load("version");
+        if (savedVersion !== this.meta.version) {
+            this.api.UI.showChangelogModal({
+                title: this.meta.name,
+                subtitle: this.meta.version,
+                changes: config.changelog,
+            });
+            this.api.Data.save("version", this.meta.version);
+        }
+        this.loadStats();
+        this.updateConfigWithStats();
+        this.setupListeners();
+    }
+
+    stop() {
+        this.teardownListeners();
+        this.saveStats();
+    }
+
+    loadStats() {
+        const savedStats = this.api.Data.load("stats") || {};
+        this.stats = {
+            totalTime: savedStats.totalTime || 0,
+            messageCount: savedStats.messageCount || 0,
+            voiceConnectCount: savedStats.voiceConnectCount || 0,
+            clickCount: savedStats.clickCount || 0,
+        };
+    }
+
+    saveStats() {
+        this.api.Data.save("stats", this.stats);
+    }
+
+    updateConfigWithStats() {
+        config.settings[0].settings[0].value = this.formatTime(
+            this.stats.totalTime
+        );
+        config.settings[0].settings[1].value =
+            this.stats.messageCount.toString();
+        config.settings[0].settings[2].value = this.stats.clickCount.toString();
+        config.settings[0].settings[3].value =
+            this.stats.voiceConnectCount.toString();
+    }
+
+    setupListeners() {
+        const Dispatcher = BdApi.Webpack.getModule(
+            (m) => m.dispatch && m.subscribe
+        );
+        Dispatcher.subscribe(
+            "RTC_CONNECTION_STATE",
+            this.handleVoiceStateChange.bind(this)
+        );
+        Dispatcher.subscribe(
+            "MESSAGE_CREATE",
+            this.handleSendMessage.bind(this)
+        );
+        document.addEventListener("click", this.handleClick.bind(this));
+    }
+
+    teardownListeners() {
+        const Dispatcher = BdApi.Webpack.getModule(
+            (m) => m.dispatch && m.subscribe
+        );
+        Dispatcher.unsubscribe(
+            "RTC_CONNECTION_STATE",
+            this.handleVoiceStateChange.bind(this)
+        );
+        Dispatcher.unsubscribe(
+            "MESSAGE_CREATE",
+            this.handleSendMessage.bind(this)
+        );
+        document.removeEventListener("click", this.handleClick.bind(this));
+    }
+
+    handleVoiceStateChange(event) {
+        if (event.state === "RTC_CONNECTED") {
+            this.stats.voiceConnectCount++;
+        }
+        this.saveStats();
+        this.updateConfigWithStats();
+    }
+
+    handleSendMessage(event) {
+        const UserStore = BdApi.Webpack.getModule((m) => m.getCurrentUser);
+        const currentUser = UserStore?.getCurrentUser();
+        if (currentUser && event.message.author.id === currentUser.id) {
+            this.stats.messageCount++;
+            this.saveStats();
+            this.updateConfigWithStats();
+        }
+    }
+
+    handleClick() {
+        this.stats.clickCount++;
+        this.saveStats();
+        this.updateConfigWithStats();
+    }
+
+    getSettingsPanel() {
+        return BdApi.UI.buildSettingsPanel({
+            settings: config.settings,
+        });
+    }
+
+    formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(
+            2,
+            "0"
+        );
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        return `${hours}:${minutes}:${seconds}`;
+    }
+};
