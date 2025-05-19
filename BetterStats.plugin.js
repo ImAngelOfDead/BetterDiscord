@@ -248,7 +248,6 @@ module.exports = class BetterStats {
         const currentUser = this.UserStore?.getCurrentUser();
         if (currentUser && event.message.author.id === currentUser.id) {
             this.stats.messageCount += 1/3; // hardcode <33333333333333333333
-            this.stats.messageCount = Math.floor(this.stats.messageCount);
             this.statsHandler.updateConfig(config);
         }
     }
