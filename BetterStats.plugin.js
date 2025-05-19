@@ -1,10 +1,10 @@
 /**
  * @name BetterStats
- * @version 0.0.8
+ * @version 0.1.0
  * @description Tracks and displays various user statistics in Discord.
- * @author m3th4d0n
- * @source https://github.com/M3th4d0n/BetterDiscord/blob/main/BetterStats.plugin.js
- * @updateUrl https://github.com/M3th4d0n/BetterDiscord/blob/main/BetterStats.plugin.js
+ * @author ImAngelOfDead
+ * @source https://github.com/ImAngelOfDead/BetterDiscord/blob/main/BetterStats.plugin.js
+ * @updateUrl https://github.com/ImAngelOfDead/BetterDiscord/blob/main/BetterStats.plugin.js
  */
 
 const config = {
@@ -51,6 +51,24 @@ const config = {
             ],
         },
     ],
+    changelog: [
+        {
+            title: "New Features",
+            items: [
+                "Updated to support latest BetterDiscord API changes",
+                "Added support for the new settings panel API",
+                "Added changelog modal support"
+            ]
+        },
+        {
+            title: "Improvements",
+            items: [
+                "Optimized data storage system",
+                "Improved performance of stat tracking",
+                "fixed message count tracking",
+            ]
+        }
+    ]
 };
 
 class TimerManager {
@@ -165,8 +183,8 @@ module.exports = class BetterStats {
             clickCount: 0,
         };
 
-        this.Dispatcher = BdApi.Webpack.getModule((m) => m.dispatch && m.subscribe);
-        this.UserStore = BdApi.Webpack.getModule((m) => m.getCurrentUser);
+        this.Dispatcher = this.api.Webpack.getModule(m => m.dispatch && m.subscribe);
+        this.UserStore = this.api.Webpack.getModule(m => m.getCurrentUser);
 
         this.handleVoiceStateChange = this.handleVoiceStateChange.bind(this);
         this.handleSendMessage = this.handleSendMessage.bind(this);
@@ -182,11 +200,12 @@ module.exports = class BetterStats {
         if (savedVersion !== this.meta.version) {
             this.api.UI.showChangelogModal({
                 title: this.meta.name,
-                subtitle: this.meta.version,
+                subtitle: `Version ${this.meta.version}`,
                 changes: config.changelog,
             });
             await this.api.Data.save("version", this.meta.version);
         }
+        
         await this.statsHandler.loadStats();
         this.statsHandler.updateConfig(config);
         this.setupListeners();
@@ -228,7 +247,8 @@ module.exports = class BetterStats {
     handleSendMessage(event) {
         const currentUser = this.UserStore?.getCurrentUser();
         if (currentUser && event.message.author.id === currentUser.id) {
-            this.stats.messageCount++;
+            this.stats.messageCount += 1/3; // hardcode <33333333333333333333
+            this.stats.messageCount = Math.floor(this.stats.messageCount);
             this.statsHandler.updateConfig(config);
         }
     }
@@ -238,9 +258,13 @@ module.exports = class BetterStats {
         this.statsHandler.updateConfig(config);
     }
 
+
     getSettingsPanel() {
-        return BdApi.UI.buildSettingsPanel({
+        return this.api.UI.buildSettingsPanel({
             settings: config.settings,
+            onChange: () => {
+                // settings are read only, so no need to save
+            }
         });
     }
 };
